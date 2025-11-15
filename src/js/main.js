@@ -13,6 +13,7 @@ const colorPicker = document.getElementById("color-picker");
 const getSchemeBtn = document.getElementById("get-scheme-btn");
 const swatchWraps = document.querySelectorAll(".swatch-wrap");
 const savedPalettesContainer = document.getElementById("saved-palettes");
+const randomBtn = document.getElementById("random-color-btn");
 
 
 const darkToggle = document.getElementById("dark-toggle");
@@ -36,6 +37,28 @@ if (savedTheme === "dark") {
     darkToggle.textContent = "☀️";
 }
 
+
+function getRandomHex() {
+    const random = Math.floor(Math.random() * 16777215); // 0 to FFFFFF
+    return "#" + random.toString(16).padStart(6, "0").toUpperCase();
+}
+
+
+randomBtn.addEventListener("click", () => {
+    const randomColor = getRandomHex();
+
+    // update picker UI
+    colorPicker.value = randomColor;
+
+    // generate & display palette
+    const palette = generateLocalPalette(randomColor);
+    renderPalette(palette);
+    savePalette(palette);
+
+    // small visual pulse on picker
+    colorPicker.classList.add("ring-2", "ring-purple-400");
+    setTimeout(() => colorPicker.classList.remove("ring-2", "ring-purple-400"), 300);
+});
 
 
 // generate 5 tints from a base color
@@ -65,11 +88,28 @@ function renderPalette(palette) {
 
         box.style.backgroundColor = palette[i];
         label.textContent = palette[i];
+
+        // Remove existing animation
+        box.style.animation = "none";
+
+        label.style.opacity = "0";
+
+
+        setTimeout(() => {
+            label.style.transition = "opacity 0.3s ease";
+            label.style.opacity = "1";
+        }, i * 80 + 150);
+
+
+        // Trigger stagger animation
+        setTimeout(() => {
+            box.style.animation = `fadeInUp 0.35s ease forwards`;
+        }, i * 80); // STAGGER (80ms between each swatch)
     });
 
-    // activate click-to-copy behavior
     enableCopy();
 }
+
 
 
 function renderSavedPalettes() {
@@ -84,6 +124,9 @@ function renderSavedPalettes() {
             card.classList.remove("opacity-0", "scale-95");
         });
     });
+
+    setTimeout(updateScrollFade, 30);
+
 }
 
 
@@ -222,18 +265,27 @@ const savedChevron = savedHeader.querySelector("i");
 
 savedHeader.addEventListener("click", () => {
     const isOpen = savedPanel.classList.contains("open");
-
-    if (isOpen) {
-        savedPanel.classList.remove("open");
-        savedPanel.style.maxHeight = "0px";
-        savedChevron.style.transform = "rotate(0deg)";
-    } else {
-        const scrollHeight = savedPanel.scrollHeight;
-        savedPanel.classList.add("open");
-        savedPanel.style.maxHeight = scrollHeight + "px";
-        savedChevron.style.transform = "rotate(180deg)";
-    }
+    isOpen ? closeAccordion() : openAccordion();
 });
+
+
+const savedPanelScroll = document.getElementById("saved-panel");
+const fadeTop = document.getElementById("fade-top");
+const fadeBottom = document.getElementById("fade-bottom");
+
+function updateScrollFade() {
+    const scrollTop = savedPanelScroll.scrollTop;
+    const maxScroll = savedPanelScroll.scrollHeight - savedPanelScroll.clientHeight;
+
+    fadeTop.style.opacity = scrollTop > 5 ? "1" : "0";
+    fadeBottom.style.opacity = scrollTop < maxScroll - 5 ? "1" : "0";
+}
+
+savedPanelScroll.addEventListener("scroll", updateScrollFade);
+
+// Trigger on load & whenever new content is rendered
+setTimeout(updateScrollFade, 50);
+
 
 
 savedPanel.addEventListener("scroll", () => {
@@ -244,5 +296,46 @@ savedPanel.addEventListener("scroll", () => {
     }
 });
 
+function openAccordion() {
+    if (!savedPanel.classList.contains("open")) {
+        savedPanel.classList.add("open");
+        savedPanel.style.maxHeight = savedPanel.scrollHeight + "px";
+        savedChevron.style.transform = "rotate(180deg)";
+    }
+}
+
+function closeAccordion() {
+    if (savedPanel.classList.contains("open")) {
+        savedPanel.classList.remove("open");
+        savedPanel.style.maxHeight = "0px";
+        savedChevron.style.transform = "rotate(0deg)";
+    }
+}
 
 
+
+
+document.addEventListener("keydown", (e) => {
+    const key = e.key.toLowerCase();
+
+    // Enter → Generate Palette
+    if (key === "enter") {
+        getSchemeBtn.click();
+    }
+
+    // R → Random Color
+    if (key === "r") {
+        randomBtn.click();
+    }
+
+    // Arrow Down / Space → Open accordion
+    if ((key === "arrowdown" || key === " ") && document.activeElement === savedHeader) {
+        e.preventDefault();
+        openAccordion();
+    }
+
+    // Arrow Up / Esc → Close accordion
+    if (key === "arrowup" || key === "escape") {
+        closeAccordion();
+    }
+});
