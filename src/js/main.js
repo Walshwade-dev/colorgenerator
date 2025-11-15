@@ -92,8 +92,11 @@ function createPaletteCard(palette, index) {
     const card = document.createElement("div");
     card.className =
         "w-full p-3 bg-gray-200 dark:bg-gray-900 shadow-md cursor-pointer " +
-        "hover:shadow-lg transition rounded-md ring-1 ring-black/10 dark:ring-white/10 " +
-        "opacity-0 scale-95 relative group";
+        "rounded-md ring-1 ring-black/10 dark:ring-white/10 " +
+        "opacity-0 scale-95 relative group transition-all duration-200 " +
+        "hover:scale-[1.02] hover:-translate-y-1 hover:shadow-xl " +
+        "dark:hover:shadow-white/20 active:scale-[0.98]";
+
 
     const header = createPaletteHeader(index, card);
     const row = createPaletteRow(palette); // <-- swatches
@@ -129,6 +132,7 @@ function createPaletteHeader(index, card) {
     trash.className =
         "fa-solid fa-trash text-red-500 hover:text-red-600 cursor-pointer " +
         "opacity-0 group-hover:opacity-100 transition";
+
 
     trash.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -228,6 +232,15 @@ savedHeader.addEventListener("click", () => {
         savedPanel.classList.add("open");
         savedPanel.style.maxHeight = scrollHeight + "px";
         savedChevron.style.transform = "rotate(180deg)";
+    }
+});
+
+
+savedPanel.addEventListener("scroll", () => {
+    if (savedPanel.scrollTop > 0) {
+        savedHeader.classList.add("shadow-md");
+    } else {
+        savedHeader.classList.remove("shadow-md");
     }
 });
 
