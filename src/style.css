@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Hide scrollbar but keep scroll behavior */
+#saved-panel::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+#saved-panel {
+  scrollbar-width: none;
+  /* Firefox */
+}
